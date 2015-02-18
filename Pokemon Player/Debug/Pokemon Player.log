@@ -1,4 +1,4 @@
-﻿Build started 2/16/2015 6:17:24 PM.
+﻿Build started 2/17/2015 5:41:32 PM.
      1>Project "C:\Users\Branden\documents\visual studio 2010\Projects\Pokemon Player\Pokemon Player\Pokemon Player.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\Pokemon Player.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -25,4 +25,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.39
+Time Elapsed 00:00:01.55

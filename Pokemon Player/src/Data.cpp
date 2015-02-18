@@ -6,6 +6,7 @@ Data::Data()
 	//Normal, Fire, Water, ELectric, Grass, Ice, Fighting, Poison, Ground, Flying, Psychic
     //Bug Rock Ghost Dragon, NULL
 	int tmpCsvConvert[] = {-1, 0, 6, 9, 7, 8, 12, 11, 13, -1, 1, 2, 4, 3, 10, 5, 14};
+	//The fifteenth is my addition, a "Null" type for single type pokemon.
 	int tmpGameConvert[] = {0, 6, 9, 7, 8, 12, -1, 11, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 4, 3, 9, 5, 14};
 
 	for(int i = 0;  i < 16; i++)
@@ -59,6 +60,13 @@ Move Data::getMove(int index)
 	return moveList[index];
 }
 
+//Convert the type that the game stores to one that my program uses
+int Data::convGameType(int t)
+{
+	return gameToMine[t];
+}
+
+
 //I copied these off of stack overflow
 //http://stackoverflow.com/questions/236129/split-a-string-in-c/236803#236803
 vector<string> &Data::split(const string &s, char delim, vector<string> &elems) {
@@ -69,7 +77,6 @@ vector<string> &Data::split(const string &s, char delim, vector<string> &elems) 
     }
     return elems;
 }
-
 
 vector<string> Data::split(const string &s, char delim) {
     vector<string> elems;

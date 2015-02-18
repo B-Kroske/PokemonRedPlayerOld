@@ -10,8 +10,8 @@
 class Battle {
 
     public:
-		Battle();
-		void fight(Data &dat);
+		Battle(Data &d);
+		void fight();
 
     private:
 		void init();
@@ -20,6 +20,9 @@ class Battle {
 		//Variables to track the state of a battle
 		int pkmOut;
 		int moveCur;
+
+		//Storage for various things that may be useful
+		Data dat;
 
         char * memBlock;
 		bool readRam();

@@ -18,7 +18,7 @@ class Pokemon {
 		// false if we want the max (non-crit) damage)
         int calcDamage(Pokemon def, int moveNum, bool minDam);
         //Prints a pokemon's info
-        void printInfo();
+        void showInfo();
 
     private:
         const static int STAT_COUNT = 5;
