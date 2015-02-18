@@ -106,7 +106,7 @@ int Pokemon::calcDamage(Pokemon def, int moveNum, bool minDam)
     return damage;
 }
 
-void Pokemon::printInfo()
+void Pokemon::showInfo()
 {
     cout << name << " " << level << endl;
     cout << types[0] << " " << types[1] << endl;

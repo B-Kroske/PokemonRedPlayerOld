@@ -36,10 +36,12 @@ class Data {
 	public:
 		Data();
 		Move getMove(int index);
+		int convGameType(int t);
+		
 
 	private:
-		int csvToMine[16];
 		int gameToMine[26];
+		int csvToMine[16];
 		Move moveList[166];
 		bool initMoves();
 
