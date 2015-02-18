@@ -17,6 +17,10 @@ class Battle {
 		void init();
 		//The current state of the player's Team
 		Pokemon playerTeam[6];
+
+		//The opponent
+		Pokemon enemy;
+
 		//Variables to track the state of a battle
 		int pkmOut;
 		int moveCur;
@@ -27,8 +31,9 @@ class Battle {
         char * memBlock;
 		bool readRam();
 		bool buildTeam();
-		bool updatePoke(Pokemon poke);
-		bool calculateDamage();
+		//
+		bool updatePoke(int poke);
+		double calcDamage(Pokemon atk, Pokemon def, int move, bool isMax);
 		//A pokmeon's info is stored in a longer format outside of battle. Pass the address of the start of the pokemon's info
 		Pokemon loadLongPoke(int addr);
 		Pokemon loadShortPoke(int addr);

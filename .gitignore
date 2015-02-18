@@ -1,0 +1,8 @@
+#Debug files that are unnecessary
+./Debug/Emulator/.
+./Debug/InfoFiles/MovesCsv.txt
+./Debug/InfoFiles/TypeMap.txt
+'./Debug/Pokemon Player.exe'
+'./Debug/Pokemon Player.ilk'
+'./Debug/Pokemon Player.pdb'
+'./Pokemon Player/Debug'

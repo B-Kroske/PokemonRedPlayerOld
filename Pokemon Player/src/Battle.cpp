@@ -20,6 +20,11 @@ void Battle::fight()
 	readRam();
 	buildTeam();
 
+	playerTeam[0].showInfo();
+	enemy.showInfo();
+
+	cout << calcDamage(playerTeam[0], enemy, 0, false) << " - " << calcDamage(playerTeam[0], enemy, 0, true) << endl;
+	cout << calcDamage(enemy, playerTeam[0], 0, false) << " - " << calcDamage(enemy, playerTeam[0], 0, true) << endl;
 }
 bool Battle::readRam()
 {
@@ -80,20 +85,49 @@ Pokemon Battle::loadShortPoke(int addr)
 	return newPoke;
 }
 
-int Battle::calcDamage
+double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
+{
+	Move mv = dat.getMove(atk.getMove(move));
+    double damage = (int)((2 * atk.getLvl()) / 5 + 2);
+    //Multiply by the attack or special stat
+    damage *= atk.getStat(dat.atkTarg(mv.type));
+	//Multiply by the move's power
+    damage *= mv.pow;
+    //Divide by defense
+    damage /= (dat.atkTarg(mv.type) == 1) ? def.getStat(2) : def.getStat(3);
+	damage = (int) damage;
+    damage /= 50;
+	damage = (int) damage;
+    //cout << damage << endl;
+    if(damage > 997)
+        damage = 997;
+    damage += 2;
+    
+
+	//Take STAB into account
+    damage *= (atk.isSTAB(mv.type)) ? 1.5 : 1.0;
+    
+    //Is the target weak to the move?
+    damage *= def.calcWeak(mv.type);
+    
+    if(damage < 768)
+    {
+        damage *= (isMax) ? 255 : 217;
+        damage /= 255;
+    }
+    
+    return damage;
+}
 
 bool Battle::buildTeam()
 {
 	//Load the fist enemy
-	Pokemon Enemy = loadShortPoke(0x0FDA);
-
-	//Load the Player's First pokemon
-	Pokemon leadPoke = loadShortPoke(0x1009);
+	enemy = loadShortPoke(0x0FDA);
 
 	//Load the entire team of pokemon
 	Pokemon team[6];
 	int teamMem = (char) memBlock[0x1163];
-	for(int i = 0; i < teamMem; i++)
+	for(int i = 1; i < teamMem; i++)
 	{
 		playerTeam[i] = loadLongPoke(0x116B + (44 * i));
 	}
@@ -102,12 +136,11 @@ bool Battle::buildTeam()
 }
 
 //Updates a pokemon with its current stat values
-bool Battle::updatePoke(Pokemon poke)
+bool Battle::updatePoke(int pos)
 {
-	
-	return true;
-}
-bool Battle::calculateDamage()
-{
+	if(pos >= 0)
+		playerTeam[pos] = loadShortPoke(0x1009);
+	else
+		enemy = loadShortPoke(0xCFDA);
 	return true;
 }
