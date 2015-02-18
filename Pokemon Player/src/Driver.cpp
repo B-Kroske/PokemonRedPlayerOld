@@ -7,7 +7,7 @@ int main()
 {
 	Data dat;
 	
-	//Sleep(5000);
+	Sleep(5000);
 	Battle battleMode(dat);
 	battleMode.fight();
 	return 0;

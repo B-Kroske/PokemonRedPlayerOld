@@ -37,9 +37,10 @@ class Data {
 		Data();
 		Move getMove(int index);
 		int convGameType(int t);
-		
+		int atkTarg(int t);
 
 	private:
+		int physOrSpec[15];
 		int gameToMine[26];
 		int csvToMine[16];
 		Move moveList[166];

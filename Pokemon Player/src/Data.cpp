@@ -6,11 +6,16 @@ Data::Data()
 	//Normal, Fire, Water, ELectric, Grass, Ice, Fighting, Poison, Ground, Flying, Psychic
     //Bug Rock Ghost Dragon, NULL
 	int tmpCsvConvert[] = {-1, 0, 6, 9, 7, 8, 12, 11, 13, -1, 1, 2, 4, 3, 10, 5, 14};
-	//The fifteenth is my addition, a "Null" type for single type pokemon.
 	int tmpGameConvert[] = {0, 6, 9, 7, 8, 12, -1, 11, 13, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 2, 4, 3, 9, 5, 14};
 
+	//Tracks wherter a move is physical or special
+	int tmpPhysSpec[] = {1, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 1, 1, 1, 3, 0};
+
 	for(int i = 0;  i < 16; i++)
+	{
 		csvToMine[i] = tmpCsvConvert[i];
+		physOrSpec[i] = tmpPhysSpec[i];
+	}
 	for(int i = 0;  i < 27; i++)
 		gameToMine[i] = tmpGameConvert[i];
 	cout << "Working" << endl;
@@ -66,6 +71,11 @@ int Data::convGameType(int t)
 	return gameToMine[t];
 }
 
+//Does a move target defense or special?
+int Data::atkTarg(int t)
+{
+	return physOrSpec[t];
+}
 
 //I copied these off of stack overflow
 //http://stackoverflow.com/questions/236129/split-a-string-in-c/236803#236803

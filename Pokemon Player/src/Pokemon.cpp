@@ -38,7 +38,7 @@ Pokemon::Pokemon(string n, int l, int s[], int t[], int mvs[], int pow[])
     } 
 }
 
-double Pokemon::calcWeak(int moveType, Pokemon def)
+double Pokemon::calcWeak(int moveType)
 {
     //Normal, Fire, Water, ELectric, Grass, Ice, Fighting, Poison, Ground, Flying, Psychic
     //Bug Rock Ghost Dragon, NULL
@@ -63,11 +63,11 @@ double Pokemon::calcWeak(int moveType, Pokemon def)
     double multiplier = 1;
     for(int i = 0; i < 2; i++)
     {
-        if(WEAK_CHART[moveType][def.types[i]] == 1)
+        if(WEAK_CHART[moveType][types[i]] == 1)
             multiplier *= 2;
-        else if(WEAK_CHART[moveType][def.types[i]] == 2)
+        else if(WEAK_CHART[moveType][types[i]] == 2)
             multiplier *= .5;
-        else if(WEAK_CHART[moveType][def.types[i]] == 3)
+        else if(WEAK_CHART[moveType][types[i]] == 3)
             multiplier = 0;
     }
 
@@ -75,36 +75,27 @@ double Pokemon::calcWeak(int moveType, Pokemon def)
     return multiplier;
 }
 
-int Pokemon::calcDamage(Pokemon def, int moveNum, bool minDam)
+int Pokemon::getLvl()
 {
-    static int PHYS_SPEC[] = {1, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 1, 1, 1, 3};
-
-    int damage = ((2 * level) / 5 + 2);
-    //Add in the attack stat
-//    damage *= stats[PHYS_SPEC[moves[moveNum].type]];
-    //damage *= moves[moveNum].pow;
-    //Divide by defense
-    //damage /= (PHYS_SPEC[moves[moveNum].type] == 1) ? def.stats[2] : def.stats[3];
-    damage /= 50;
-    //cout << damage << endl;
-    if(damage > 997)
-        damage = 997;
-    damage += 2;
-    //if(moves[moveNum].type == types[0] || moves[moveNum].type == types[1])
-    {
-        damage *= 1.5;
-    }
-    
-    //damage *= calcWeak(moves[moveNum].type, def);
-    
-    if(damage < 768)
-    {
-        damage *= (minDam) ? 217 : 255;
-        damage /= 255;
-    }
-    
-    return damage;
+	return level;
 }
+
+int Pokemon::getStat(int pos)
+{
+	return stats[pos];
+}
+
+int Pokemon::getMove(int pos)
+{
+	return moves[pos];
+}
+
+bool Pokemon::isSTAB(int type)
+{
+	return (type == types[0] || type == types[1]);
+		
+}
+
 
 void Pokemon::showInfo()
 {
