@@ -1,4 +1,9 @@
 #Debug files that are unnecessary
+*.tlog
+*.obj
+*.pdb
+*.exe
+
 ./Debug/Emulator/.
 ./Debug/InfoFiles/MovesCsv.txt
 ./Debug/InfoFiles/TypeMap.txt
