@@ -5,26 +5,49 @@ using namespace std;
 Battle::Battle(Data &d)
 {
 	pkmOut = 0;
-	moveCur = 0;
+	currMove = 0;
 	//Save the reference to the data
 	dat = d;
+
+	//Should never be accessed before being initialized, but just in case
+	for(int i = 0; i < 2; i++)
+		nextMove[i] = 0;
 }
 
 void Battle::fight()
 {
 	//Reset the state variables
 	pkmOut = 0;
-	moveCur = 0;
+	currMove = 0;
 
-	//Get the ram and rebuild the Player's team
+	//Get the ram and build the Player's team
 	readRam();
 	buildTeam();
 
-	playerTeam[0].showInfo();
-	enemy.showInfo();
+	playerTeam[0].printInfo();
+	enemy.printInfo();
 
-	cout << calcDamage(playerTeam[0], enemy, 0, false) << " - " << calcDamage(playerTeam[0], enemy, 0, true) << endl;
-	cout << calcDamage(enemy, playerTeam[0], 0, false) << " - " << calcDamage(enemy, playerTeam[0], 0, true) << endl;
+	while(((int) memBlock[0x1057]) > 0)
+	{
+		//Read the current state of the battle
+		readRam();
+		//Calculate the best action
+		determineAction();
+		//Take the action
+		if(nextMove[0] == 1)
+		{
+			cout << "Attacking with move " << nextMove[1] << endl;
+			//Attack function
+			attack(nextMove[1]);
+		}
+
+		//Take some time to let the attack play out
+		Sleep(4000);
+		//Mash "B" to get by the boring words (carful to not have the cursor in a text document)
+		Control::mashB(6);
+	}
+	//Talk to everyone after the battle
+	Control::mashB(10);
 }
 bool Battle::readRam()
 {
@@ -56,8 +79,11 @@ Pokemon Battle::loadLongPoke(int addr)
 {
 	//Load the stats from RAM based on their offset from the starting address
 	int stats[] = {loadStat(addr + 1), loadStat(addr + 36), loadStat(addr + 38), loadStat(addr + 40), loadStat(addr + 42)};
+
 	int types[] = {dat.convGameType(memBlock[addr + 5]), (memBlock[addr + 5] == memBlock[addr + 6]) ? dat.convGameType(memBlock[addr + 6]) : 15};
+
 	int moves[4] = {memBlock[addr + 8], memBlock[addr + 9], memBlock[addr + 10],memBlock[addr + 11]};
+
 	int pp[4] = {memBlock[addr + 29], memBlock[addr + 30], memBlock[addr + 31], memBlock[addr + 32]};
 
 	//Create the pokemon based on the stats
@@ -70,7 +96,9 @@ Pokemon Battle::loadShortPoke(int addr)
 {
 	//Load the stats from RAM based on their offset from the starting address
 	int stats[] = {loadStat(addr + 12), loadStat(addr + 28), loadStat(addr + 30), loadStat(addr + 32), loadStat(addr + 34)};
+
  	int types[] = {dat.convGameType(memBlock[addr + 16]), (memBlock[addr + 16] == memBlock[addr + 17]) ? dat.convGameType(memBlock[addr + 17]) : 15};
+
 	int moves[] = {memBlock[addr + 19], memBlock[addr + 20], memBlock[addr + 21],memBlock[addr + 22]};
 	
 	//If this is the user's pokemon, it has limited pp, but if a pokemon is the 
@@ -88,6 +116,8 @@ Pokemon Battle::loadShortPoke(int addr)
 double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
 {
 	Move mv = dat.getMove(atk.getMove(move));
+	cout << "Move being checked " << move << " Name: " << atk.getMove(move) << endl;
+	cout << "Pow " << mv.pow << endl;
     double damage = (int)((2 * atk.getLvl()) / 5 + 2);
     //Multiply by the attack or special stat
     damage *= atk.getStat(dat.atkTarg(mv.type));
@@ -119,15 +149,65 @@ double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
     return damage;
 }
 
+//Determine the best move to take at a specific point.
+//1 = attack, 2 = switch, 3 = heal
+void Battle::determineAction()
+{
+	double bestResults[6][3] = {{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};
+
+	double tmpStorage[3];
+	tmpStorage[2] = 0;
+
+	for(int i = 0; i < teamCount; i++)
+	{
+		cout << "checking " << i << endl;
+		//Try all moves against the opponent
+		for(int j = 0; j < 4; j++)
+		{
+			tmpStorage[0] = j;
+			tmpStorage[1] = calcDamage(playerTeam[i], enemy, j, false);
+
+			//Update with the best power
+			if(bestResults[i][1] < tmpStorage[1])
+			{
+				bestResults[i][0] = tmpStorage[0];
+				bestResults[i][1] = tmpStorage[1];
+			}
+			//Update with the max the enemy can do
+			if(bestResults[i][2] < tmpStorage[2])
+				bestResults[i][2] = tmpStorage[2];
+		}
+	}
+	
+	nextMove[0] = 1;
+	nextMove[1] = (int)bestResults[0][0];
+
+	cout << "nextMove " << nextMove[0] << " " << nextMove[1] << endl;
+}
+
+void Battle::attack(int i)
+{
+	//Get to "Fight"
+	Control::goUp();
+	Control::goLeft();
+	Control::pressA();
+	//Navigate to the proper move
+	while(currMove > i)
+		currMove--;
+	while(currMove < i)
+		currMove++;
+	//Press "A"
+	Control::pressA();
+}
+
 bool Battle::buildTeam()
 {
 	//Load the fist enemy
 	enemy = loadShortPoke(0x0FDA);
 
 	//Load the entire team of pokemon
-	Pokemon team[6];
-	int teamMem = (char) memBlock[0x1163];
-	for(int i = 1; i < teamMem; i++)
+	teamCount = memBlock[0x1163];
+	for(int i = 0; i < teamCount; i++)
 	{
 		playerTeam[i] = loadLongPoke(0x116B + (44 * i));
 	}

@@ -8,6 +8,8 @@ class Control {
     public:
         static bool pressA();
 		static bool pressB();
+		//Press B alot to skip the boring stuff
+		static bool mashB(int times);
 		static bool pressStart();
 		static bool pressSelect();
 		static bool dumpRam();

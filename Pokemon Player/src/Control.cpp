@@ -9,6 +9,7 @@ bool Control::pressKey(short vk)
 	Sleep(100);
 	//cout << "TEST: " << GetAsyncKeyState(0x5a) << endl;
 	keybd_event((unsigned char)vk,0,KEYEVENTF_KEYUP,0);
+	Sleep(100);
 
 	return true;
 }
@@ -22,6 +23,17 @@ bool Control::pressB()
 {
 	return pressKey(0x58);
 }
+bool Control::mashB(int times)
+{
+	for(int i = 0; i < times; i++)
+	{
+		Control::pressB();
+		Sleep(500);
+	}
+	return true;
+}
+
+
 bool Control::pressSelect()
 {
 	return pressKey(0x4F);
@@ -59,23 +71,18 @@ bool Control::go(int dir)
 
 bool Control::goUp()
 {
-	keybd_event((unsigned char)0x55,0,0,0); // key in
-	Sleep(100);
-	//cout << "TEST: " << GetAsyncKeyState(0x5a) << endl;
-	keybd_event((unsigned char)0x55,0,KEYEVENTF_KEYUP,0);
-
-	return true;
+	return go(0);
 }
 bool Control::goDown()
 {
-	return pressKey(VK_DOWN);
+	return go(1);
 }
 bool Control::goLeft()
 {
-	return pressKey(VK_LEFT);
+	return go(2);
 }
 
 bool Control::goRight()
 {
-	return pressKey(VK_RIGHT);
+	return go(3);
 }

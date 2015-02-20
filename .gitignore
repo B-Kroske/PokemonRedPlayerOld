@@ -5,6 +5,9 @@
 *.exe
 *.gb
 *.sav
+*.manifest
+*.lastbuildstate
+*.cache
 
 .\Debug\Emulator\.
 .\Debug\InfoFiles\MovesCsv.txt

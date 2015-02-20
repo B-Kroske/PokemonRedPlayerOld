@@ -97,7 +97,7 @@ bool Pokemon::isSTAB(int type)
 }
 
 
-void Pokemon::showInfo()
+void Pokemon::printInfo()
 {
     cout << name << " " << level << endl;
     cout << types[0] << " " << types[1] << endl;
