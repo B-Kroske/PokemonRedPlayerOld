@@ -1,5 +1,6 @@
 #Debug files that are unnecessary
 *.tlog
+*.log
 *.obj
 *.pdb
 *.exe
@@ -8,6 +9,13 @@
 *.manifest
 *.lastbuildstate
 *.cache
+*.bin
+*.sgm
+hook.txt
+*_pal
+MovesCsv.txt
+TypeMap.txt
+
 
 .\Debug\Emulator\.
 .\Debug\InfoFiles\MovesCsv.txt
