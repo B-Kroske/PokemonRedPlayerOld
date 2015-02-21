@@ -26,6 +26,8 @@ class Battle {
 		//Variables to track the state of a battle
 		int pkmOut;
 		int currMove;
+		int itemPos;
+		int currSelPoke;
 
 		//Storage for various things that may be useful
 		Data dat;

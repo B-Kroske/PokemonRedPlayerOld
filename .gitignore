@@ -11,6 +11,7 @@
 *.cache
 *.bin
 *.sgm
+*.clt
 hook.txt
 *_pal
 MovesCsv.txt
