@@ -26,7 +26,8 @@ class Pokemon {
         void printInfo();
 
     private:
-        const static int STAT_COUNT = 5;
+		//The sixth is max HP
+        const static int STAT_COUNT = 6;
         const static int NUM_TYPES = 15;
         
         std::string name;

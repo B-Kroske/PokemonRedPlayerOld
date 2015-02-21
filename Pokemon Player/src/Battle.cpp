@@ -6,6 +6,8 @@ Battle::Battle(Data &d)
 {
 	pkmOut = 0;
 	currMove = 0;
+	currSelPoke = 0;
+	itemPos = 0;
 	//Save the reference to the data
 	dat = d;
 
@@ -41,6 +43,8 @@ void Battle::fight()
 			attack(nextMove[1]);
 		}
 
+		//Heal
+		
 		//Take some time to let the attack play out
 		Sleep(4000);
 		//Mash "B" to get by the boring words (carful to not have the cursor in a text document)
@@ -78,7 +82,7 @@ int Battle::loadStat(int addr)
 Pokemon Battle::loadLongPoke(int addr)
 {
 	//Load the stats from RAM based on their offset from the starting address
-	int stats[] = {loadStat(addr + 1), loadStat(addr + 36), loadStat(addr + 38), loadStat(addr + 40), loadStat(addr + 42)};
+	int stats[] = {loadStat(addr + 1), loadStat(addr + 36), loadStat(addr + 38), loadStat(addr + 40), loadStat(addr + 42), loadStat(addr + 34)};
 
 	int types[] = {dat.convGameType(memBlock[addr + 5]), (memBlock[addr + 5] == memBlock[addr + 6]) ? dat.convGameType(memBlock[addr + 6]) : 15};
 
@@ -95,7 +99,7 @@ Pokemon Battle::loadLongPoke(int addr)
 Pokemon Battle::loadShortPoke(int addr)
 {
 	//Load the stats from RAM based on their offset from the starting address
-	int stats[] = {loadStat(addr + 12), loadStat(addr + 28), loadStat(addr + 30), loadStat(addr + 32), loadStat(addr + 34)};
+	int stats[] = {loadStat(addr + 12), loadStat(addr + 28), loadStat(addr + 30), loadStat(addr + 32), loadStat(addr + 34), loadStat(addr + 26)};
 
  	int types[] = {dat.convGameType(memBlock[addr + 16]), (memBlock[addr + 16] == memBlock[addr + 17]) ? dat.convGameType(memBlock[addr + 17]) : 15};
 
@@ -116,8 +120,10 @@ Pokemon Battle::loadShortPoke(int addr)
 double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
 {
 	Move mv = dat.getMove(atk.getMove(move));
-	cout << "Move being checked " << move << " Name: " << atk.getMove(move) << endl;
-	cout << "Pow " << mv.pow << endl;
+	if(mv.pow == 0) return 0;
+
+	//cout << "Move being checked " << move << " Name: " << atk.getMove(move) << endl;
+	//cout << "Pow " << mv.pow << endl;
     double damage = (int)((2 * atk.getLvl()) / 5 + 2);
     //Multiply by the attack or special stat
     damage *= atk.getStat(dat.atkTarg(mv.type));
@@ -146,6 +152,9 @@ double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
         damage /= 255;
     }
     
+	//Return % damage
+	//cout << damage / def.getStat(0) << endl;
+	//return damage / def.getStat(0);
     return damage;
 }
 
@@ -156,17 +165,17 @@ void Battle::determineAction()
 	double bestResults[6][3] = {{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};
 
 	double tmpStorage[3];
-	tmpStorage[2] = 0;
 
 	for(int i = 0; i < teamCount; i++)
 	{
-		cout << "checking " << i << endl;
 		//Try all moves against the opponent
 		for(int j = 0; j < 4; j++)
 		{
 			tmpStorage[0] = j;
 			tmpStorage[1] = calcDamage(playerTeam[i], enemy, j, false);
-
+			//Calculate the damage the player would take from the jth move.
+			tmpStorage[2] = calcDamage(enemy, playerTeam[i], j, false);
+			//cout << tmpStorage[1] << " " << tmpStorage[2] << endl;
 			//Update with the best power
 			if(bestResults[i][1] < tmpStorage[1])
 			{
@@ -178,9 +187,36 @@ void Battle::determineAction()
 				bestResults[i][2] = tmpStorage[2];
 		}
 	}
-	
+
+	//Assume we will attack with the strongest move on our current lead
 	nextMove[0] = 1;
-	nextMove[1] = (int)bestResults[0][0];
+	nextMove[1] = (int)bestResults[pkmOut][0];
+
+	//Will the pokemon survive a hit?
+	if(bestResults[pkmOut][2] >= playerTeam[pkmOut].getStat(0))
+	{
+		//It will drop in one more hit
+		
+		//Could it survive at full health?
+		//If no, switch
+		if(playerTeam[pkmOut].getStat(5) < bestResults[pkmOut][2])
+		{
+			cout << "SWITCH!!!" << endl;
+			nextMove[0] = 2;
+		}
+		//If yes, heal
+		else
+		{
+			cout << "HEAL!!" << endl;
+			nextMove[0] = 3;
+
+		}
+		
+	}
+	
+	//		Heal or switch to one that has teh best damage/survivability ratio (assuming it can take a hit).
+
+	
 
 	cout << "nextMove " << nextMove[0] << " " << nextMove[1] << endl;
 }
@@ -193,9 +229,15 @@ void Battle::attack(int i)
 	Control::pressA();
 	//Navigate to the proper move
 	while(currMove > i)
+	{
+		Control::goUp();
 		currMove--;
+	}
 	while(currMove < i)
+	{
+		Control::goDown();
 		currMove++;
+	}
 	//Press "A"
 	Control::pressA();
 }
