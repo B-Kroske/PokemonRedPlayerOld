@@ -77,6 +77,16 @@ int Data::atkTarg(int t)
 	return physOrSpec[t];
 }
 
+bool Data::sortResults(Result a, Result b)
+{
+	if(a.maxDamage > b.maxDamage)
+		return true;
+	else if(a.maxDamage < b.maxDamage)
+		return false;
+	else
+		return a.takeDamage > b.takeDamage;
+}
+
 //I copied these off of stack overflow
 //http://stackoverflow.com/questions/236129/split-a-string-in-c/236803#236803
 vector<string> &Data::split(const string &s, char delim, vector<string> &elems) {

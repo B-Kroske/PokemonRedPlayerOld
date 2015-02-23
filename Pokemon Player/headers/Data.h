@@ -32,12 +32,36 @@ struct Move {
     }
 };
 
+struct Result {
+	int teamPos;
+	int move;
+	double maxDamage;
+	double takeDamage;
+
+	Result(int pos, int m, int dam, int take)
+    {
+        teamPos = pos;
+		move = m;
+		maxDamage = dam;
+		takeDamage = take;
+    }
+    
+    Result()
+    {
+        teamPos = 0;
+		move = 0;
+		maxDamage = 0;
+		takeDamage = 0;
+    }
+};
+
 class Data {
 	public:
 		Data();
 		Move getMove(int index);
 		int convGameType(int t);
 		int atkTarg(int t);
+		static bool sortResults(Result a, Result b);
 
 	private:
 		int physOrSpec[15];

@@ -43,7 +43,7 @@ void Battle::fight()
 		//Read the current state of the battle
 		readRam();
 
-		//Update bost lead's stats
+		//Update both lead's stats
 		updatePoke(0);
 		updatePoke(-1);
 		//Calculate the best action
@@ -55,6 +55,12 @@ void Battle::fight()
 		{
 			//Attack function
 			attack(nextMove[1]);
+		}
+
+		//Switch
+		if(nextMove[0] == 2)
+		{
+			swap(nextMove[1]);
 		}
 
 		//Heal
@@ -172,69 +178,91 @@ double Battle::calcDamage(Pokemon atk, Pokemon def, int move, bool isMax)
     return damage;
 }
 
+
+
 //Determine the best move to take at a specific point.
 //1 = attack, 2 = switch, 3 = heal
 void Battle::determineAction()
 {
-	double bestResults[6][3] = {{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};
+	int bestChoice = 0;
+	int bestTank = 0;
+	boolean leadSafe;
+	Result bestResults[6];
 
-	double tmpStorage[3];
-
+	//Figure out the max damage that each teammember will deal and take
 	for(int i = 0; i < teamCount; i++)
 	{
+		bestResults[i].teamPos = i;
 		//Try all moves against the opponent
 		for(int j = 0; j < 4; j++)
 		{
-			tmpStorage[0] = j;
-			tmpStorage[1] = calcDamage(playerTeam[i], enemy, j, false);
-			//Calculate the damage the player would take from the jth move.
-			tmpStorage[2] = calcDamage(enemy, playerTeam[i], j, true);
+			Result tmpStorage(i, j, calcDamage(playerTeam[i], enemy, j, false), calcDamage(enemy, playerTeam[i], j, true));
 			//cout << tmpStorage[1] << " " << tmpStorage[2] << endl;
 			//Update with the best power
-			if(bestResults[i][1] < tmpStorage[1])
+			if(bestResults[i].maxDamage < tmpStorage.maxDamage)
 			{
-				bestResults[i][0] = tmpStorage[0];
-				bestResults[i][1] = tmpStorage[1];
+				bestResults[i].maxDamage = tmpStorage.maxDamage;
+				bestResults[i].move = tmpStorage.move;
 			}
 			//Update with the max the enemy can do
-			if(bestResults[i][2] < tmpStorage[2])
-				bestResults[i][2] = tmpStorage[2];
+			if(bestResults[i].takeDamage < tmpStorage.takeDamage)
+				bestResults[i].takeDamage = tmpStorage.takeDamage;
 		}
 	}
 
-	//Assume we will attack with the strongest move on our current lead
-	nextMove[0] = 1;
-	nextMove[1] = (int)bestResults[pkmOut][0];
+	//Can the lead take a hit?
+	leadSafe = bestResults[pkmOut].takeDamage < playerTeam[pkmOut].getStat(0);
 
-	cout << "MAX TAKE: " << bestResults[0][2] << endl;
-	cout << "Remaining HP: " << playerTeam[pkmOut].getStat(0) << endl << endl;
+	//Heal the lead if it is threatened
 
-	//Will the pokemon survive a hit?
-	if(bestResults[pkmOut][2] >= playerTeam[pkmOut].getStat(0))
+	//Sort to find the strongest pokemon
+	sort(begin(bestResults), end(bestResults), Data::sortResults);
+
+	//Move through the list to find something usable
+	while(bestChoice < 6)
 	{
-		//It will drop in one more hit
-		cout << "DANGER" << endl;
-		//Could it survive at full health?
-		//If no, switch
-		if(playerTeam[pkmOut].getStat(5) < bestResults[pkmOut][2])
+		//Can the best choice take the worst hit?
+		//*Yes
+		if(bestResults[bestChoice].takeDamage < playerTeam[bestResults[bestChoice].teamPos].getStat(0))
 		{
-			//Reset which move is highlighted
-			cout << "SWITCH!!!" << endl;
-			nextMove[0] = 2;
+			break;
 		}
-		//If yes, heal
+		//No, but it could if it was at full health and the lead can take a hit (I am not considering switching to a tank and then healing the best)
+		else if((leadSafe && bestResults[bestChoice].takeDamage < playerTeam[bestChoice].getStat(5)) ||
+			(pkmOut == bestResults[bestChoice].teamPos && bestResults[bestChoice].takeDamage < playerTeam[pkmOut].getStat(5)))
+		{
+			//Heal the best choice
+			cout << "Healing" << endl;
+			nextMove[0] = 3;
+			nextMove[1] = bestResults[bestChoice].teamPos;
+			return;
+		}
+		//Can the next strongest thing take a hit?
 		else
 		{
-			cout << "HEAL!!!" << endl;
-			nextMove[0] = 3;
-			nextMove[1] = 0;
+			bestChoice++;
 		}
-		
 	}
-	
-	//		Heal or switch to one that has the best damage/survivability ratio (assuming it can take a hit).
 
-	cout << "nextMove " << nextMove[0] << " " << nextMove[1] << endl;
+	if(bestChoice >= 6)
+	{
+		cout << "Something went horribly wrong" << endl;
+	}
+
+	//If the best choice is currently out, attack
+	//If it isn't, switch
+	if(bestResults[bestChoice].teamPos == pkmOut)
+	{
+		cout << "Attacking!" << endl;
+		nextMove[0] = 1;
+		nextMove[1] = bestResults[bestChoice].move;
+	}
+	else
+	{
+		cout << "Switching to " << bestResults[bestChoice].teamPos << endl;
+		nextMove[0] = 2;
+		nextMove[1] = bestResults[bestChoice].teamPos;
+	}
 }
 
 void Battle::attack(int i)
@@ -258,26 +286,48 @@ void Battle::attack(int i)
 	Control::pressA();
 }
 
+void Battle::swap(int i)
+{
+	//Get to "PKMN"
+	Control::goUp();
+	Control::goRight();
+	Control::pressA();
+	Sleep(500);
+	//Navigate to the proper pokemon
+	while(currSelPoke > i)
+	{
+		Control::goUp();
+		currSelPoke--;
+	}
+	while(currSelPoke < i)
+	{
+		Control::goDown();
+		currSelPoke++;
+	}
+	//Press "A" to select the pokemon and then confirm it
+	Control::pressA();
+	Control::pressA();
+}
+
 void Battle::heal(int i)
 {
 	//Vitally important that this move is selected properly
-	Sleep(3000);
+	Sleep(2000);
 	Control::mashB(5);
-	cout << "Healing..." << endl;
 	//Get to "Item"
 	Control::goDown();
 	Control::goLeft();
 	Control::pressA();
-	
+	Sleep(500);
+
 	//Move to the top of the item list
 	for(int j = 0; j < 20; j++)
 		Control::goUp();
 
-	cout << "using the item" << endl;
-
 	//Select that the full heal and say to use it
 	Control::pressA();
 	Control::pressA();
+	Sleep(500);
 
 	//Select the i'th pokemon
 	while(currSelPoke > i)
