@@ -12,6 +12,7 @@
 *.bin
 *.sgm
 *.clt
+vba.ini
 hook.txt
 *_pal
 MovesCsv.txt

@@ -31,7 +31,7 @@ class Pokemon {
         const static int NUM_TYPES = 15;
         
         std::string name;
-		//HP, Atk, Def, Special, Spd
+		//HP, Atk, Def, Special, Spd, Max Hp
         int stats[5];
         int types[2];
         int moves[4];

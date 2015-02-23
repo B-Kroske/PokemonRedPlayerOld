@@ -10,17 +10,26 @@ Battle::Battle(Data &d)
 	itemPos = 0;
 	//Save the reference to the data
 	dat = d;
-
+	//Create the memory chunk that will be read into
+	memBlock = new char[8192];
 	//Should never be accessed before being initialized, but just in case
 	for(int i = 0; i < 2; i++)
 		nextMove[i] = 0;
 }
+
+Battle::~Battle()
+{
+	delete[] memBlock;
+}
+
 
 void Battle::fight()
 {
 	//Reset the state variables
 	pkmOut = 0;
 	currMove = 0;
+	currSelPoke = 0;
+	itemPos = 0;
 
 	//Get the ram and build the Player's team
 	readRam();
@@ -33,33 +42,38 @@ void Battle::fight()
 	{
 		//Read the current state of the battle
 		readRam();
+
+		//Update bost lead's stats
+		updatePoke(0);
+		updatePoke(-1);
 		//Calculate the best action
 		determineAction();
+
+		cout << nextMove[0] << " " << nextMove[1] << endl;
 		//Take the action
 		if(nextMove[0] == 1)
 		{
-			cout << "Attacking with move " << nextMove[1] << endl;
 			//Attack function
 			attack(nextMove[1]);
 		}
 
 		//Heal
-		
+		if(nextMove[0] == 3)
+		{
+			heal(nextMove[1]);
+		}
 		//Take some time to let the attack play out
-		Sleep(4000);
+		Sleep(5000);
 		//Mash "B" to get by the boring words (carful to not have the cursor in a text document)
 		Control::mashB(6);
 	}
 	//Talk to everyone after the battle
 	Control::mashB(10);
 }
+
 bool Battle::readRam()
 {
 	Control::dumpRam();
-
-	streampos size;
-	memBlock = new char [8192];
-
 	ifstream file ("./Emulator/cgb_wram.bin", ios::in|ios::binary);
 	if (file.is_open())
 	{
@@ -67,7 +81,7 @@ bool Battle::readRam()
 		file.read (memBlock, 8192);
 		file.close();
 
-		cout << "RAM loaded" << endl;
+		//cout << "RAM loaded" << endl;
 	}
 	else cout << "Unable to open file" << endl;
 
@@ -174,7 +188,7 @@ void Battle::determineAction()
 			tmpStorage[0] = j;
 			tmpStorage[1] = calcDamage(playerTeam[i], enemy, j, false);
 			//Calculate the damage the player would take from the jth move.
-			tmpStorage[2] = calcDamage(enemy, playerTeam[i], j, false);
+			tmpStorage[2] = calcDamage(enemy, playerTeam[i], j, true);
 			//cout << tmpStorage[1] << " " << tmpStorage[2] << endl;
 			//Update with the best power
 			if(bestResults[i][1] < tmpStorage[1])
@@ -192,31 +206,33 @@ void Battle::determineAction()
 	nextMove[0] = 1;
 	nextMove[1] = (int)bestResults[pkmOut][0];
 
+	cout << "MAX TAKE: " << bestResults[0][2] << endl;
+	cout << "Remaining HP: " << playerTeam[pkmOut].getStat(0) << endl << endl;
+
 	//Will the pokemon survive a hit?
 	if(bestResults[pkmOut][2] >= playerTeam[pkmOut].getStat(0))
 	{
 		//It will drop in one more hit
-		
+		cout << "DANGER" << endl;
 		//Could it survive at full health?
 		//If no, switch
 		if(playerTeam[pkmOut].getStat(5) < bestResults[pkmOut][2])
 		{
+			//Reset which move is highlighted
 			cout << "SWITCH!!!" << endl;
 			nextMove[0] = 2;
 		}
 		//If yes, heal
 		else
 		{
-			cout << "HEAL!!" << endl;
+			cout << "HEAL!!!" << endl;
 			nextMove[0] = 3;
-
+			nextMove[1] = 0;
 		}
 		
 	}
 	
-	//		Heal or switch to one that has teh best damage/survivability ratio (assuming it can take a hit).
-
-	
+	//		Heal or switch to one that has the best damage/survivability ratio (assuming it can take a hit).
 
 	cout << "nextMove " << nextMove[0] << " " << nextMove[1] << endl;
 }
@@ -242,6 +258,44 @@ void Battle::attack(int i)
 	Control::pressA();
 }
 
+void Battle::heal(int i)
+{
+	//Vitally important that this move is selected properly
+	Sleep(3000);
+	Control::mashB(5);
+	cout << "Healing..." << endl;
+	//Get to "Item"
+	Control::goDown();
+	Control::goLeft();
+	Control::pressA();
+	
+	//Move to the top of the item list
+	for(int j = 0; j < 20; j++)
+		Control::goUp();
+
+	cout << "using the item" << endl;
+
+	//Select that the full heal and say to use it
+	Control::pressA();
+	Control::pressA();
+
+	//Select the i'th pokemon
+	while(currSelPoke > i)
+	{
+		Control::goUp();
+		currSelPoke--;
+	}
+	while(currSelPoke < i)
+	{
+		Control::goDown();
+		currSelPoke++;
+	}
+	//Press "A" to heal
+	Control::pressA();
+	//Press "B" a couple times
+	Control::mashB(3);
+}
+
 bool Battle::buildTeam()
 {
 	//Load the fist enemy
@@ -263,6 +317,6 @@ bool Battle::updatePoke(int pos)
 	if(pos >= 0)
 		playerTeam[pos] = loadShortPoke(0x1009);
 	else
-		enemy = loadShortPoke(0xCFDA);
+		enemy = loadShortPoke(0x0FDA);
 	return true;
 }
